@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  RUST_MINVERSION: 1.41.1
+  RUST_MINVERSION: 1.78.0
   CARGO_INCREMENTAL: 0
   CARGO_NET_RETRY: 10
 
@@ -18,25 +18,10 @@ jobs:
           - stable
           - beta
           - nightly
+          - 1.78.0
 
         features:
           - ''
-
-        include:
-          - rust: stable
-            features: ''
-          - rust: stable
-            features: '--features "std"'
-          - rust: stable
-            features: '--no-default-features'
-          - rust: stable
-            features: '--no-default-features --features "alloc"'
-          - rust: nightly
-            features: ''
-          - rust: nightly
-            features: '--no-default-features'
-          - rust: nightly
-            features: '--no-default-features --features "alloc"'
 
     steps:
       - name: Checkout sources
@@ -64,37 +49,59 @@ jobs:
           command: test
           args: --verbose ${{ matrix.features }}
 
- 
-
-  bench:
-    name: Bench
+  minrust:
+    name: Test minimal rust version
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install rust
+      - name: Install rust (${{ env.RUST_MINVERSION }})
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: ${{ env.RUST_MINVERSION }}
           profile: minimal
           override: true
 
       - name: Cache
         uses: Swatinem/rust-cache@v1
 
-      - name: Compile bench
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
-          command: bench
-          args: --verbose --no-run --features ""
+          command: build
+          args: --verbose --no-default-features --features "alloc,std"
 
-      - name: Run bench
-        uses: actions-rs/cargo@v1
-        with:
-          command: bench
-          args: --verbose --features ""
+  # bench:
+  #   name: Bench
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v2
+
+  #     - name: Install rust
+  #       uses: actions-rs/toolchain@v1
+  #       with:
+  #         toolchain: nightly
+  #         profile: minimal
+  #         override: true
+
+  #     - name: Cache
+  #       uses: Swatinem/rust-cache@v1
+
+  #     - name: Compile bench
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: bench
+  #         args: --verbose --no-run --features ""
+
+  #     - name: Run bench
+  #       uses: actions-rs/cargo@v1
+  #       with:
+  #         command: bench
+  #         args: --verbose --features ""
 
   doc:
     name: Build documentation
@@ -167,9 +174,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: tarpaulin
-          args: --output-dir coverage --out Lcov
+          args: --output-dir coverage --out xml --workspace --exclude benchmarks
       
-      - name: Publish to Coveralls
-        uses: coverallsapp/github-action@master
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: rust-bakery/nom

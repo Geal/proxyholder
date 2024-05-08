@@ -71,7 +71,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --no-default-features --features "alloc,std"
+          args: --verbose
 
   # bench:
   #   name: Bench
@@ -121,7 +121,7 @@ jobs:
       - name: Build
         env:
           RUSTDOCFLAGS: -D warnings
-        run: cargo doc --no-deps --document-private-items --workspace --verbose --features "std docsrs"
+        run: cargo doc --no-deps --document-private-items --workspace --verbose
 
   fmt:
     name: Check formatting

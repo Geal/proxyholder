@@ -14,6 +14,8 @@ use hyper_util::server::conn::auto;
 use tokio::net::TcpListener;
 
 use crate::configuration::Configuration;
+use crate::network::session::Session;
+mod session;
 
 pub(crate) struct Proxy {}
 
@@ -34,17 +36,9 @@ impl Proxy {
 
             let io = TokioIo::new(stream);
 
-            // Spawn a tokio task to serve multiple connections concurrently
             tokio::task::spawn(async move {
-                // Finally, we bind the incoming connection to our `hello` service
-                if let Err(err) = http1::Builder::new()
-                    // `service_fn` converts our function in a `Service`
-                    .serve_connection(io, service_fn(hello))
-                    .await
-                {
-                    eprintln!("Error serving connection: {:?}", err);
-                }
-                println!("served connection");
+                let mut session = Session::new(io);
+                session.run().await;
             });
         }
         Ok(Proxy {})
@@ -53,8 +47,4 @@ impl Proxy {
     pub(crate) async fn run(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Ok(())
     }
-}
-
-async fn hello(_: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
-    Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
 }

@@ -32,9 +32,9 @@ impl<Stream: AsyncRead + AsyncWrite + Unpin> Session<Stream> {
             .serve_connection(stream, service_fn(hello))
             .await
         {
-            eprintln!("Error serving connection: {:?}", err);
+            tracing::error!(error = %err, "Error serving connection",);
         }
-        println!("served connection");
+        tracing::info!("served connection");
     }
 }
 

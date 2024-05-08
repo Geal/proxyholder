@@ -26,13 +26,13 @@ impl Proxy {
         //FIXME: check NO_DELAY
         let listener = TcpListener::bind(configuration.listener.address).await?;
 
-        println!(
-            "starting loop listening on {}",
-            configuration.listener.address
+        tracing::info!(
+            address = %configuration.listener.address,
+            "starting loop listening",
         );
         loop {
             let (stream, _) = listener.accept().await?;
-            println!("got listener");
+            tracing::info!("got TCP stream");
 
             let io = TokioIo::new(stream);
 

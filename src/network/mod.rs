@@ -15,6 +15,7 @@ use tokio::net::TcpListener;
 
 use crate::configuration::Configuration;
 use crate::network::session::Session;
+use crate::router::Router;
 mod session;
 
 pub(crate) struct Proxy {}
@@ -23,6 +24,7 @@ impl Proxy {
     pub(crate) async fn new(
         configuration: Arc<Configuration>,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let router = Arc::new(Router::new(&configuration).await);
         //FIXME: check NO_DELAY
         let listener = TcpListener::bind(configuration.listener.address).await?;
 
@@ -35,10 +37,11 @@ impl Proxy {
             tracing::info!("got TCP stream");
 
             let io = TokioIo::new(stream);
+            let router = router.clone();
 
             tokio::task::spawn(async move {
                 let mut session = Session::new(io);
-                session.run().await;
+                session.run(router).await;
             });
         }
         Ok(Proxy {})

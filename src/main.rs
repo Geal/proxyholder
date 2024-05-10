@@ -4,6 +4,8 @@ use configuration::Configuration;
 
 mod configuration;
 mod network;
+mod router;
+mod service;
 mod telemetry;
 
 #[tokio::main]

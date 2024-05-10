@@ -693,6 +693,7 @@ dependencies = [
  "hyper-rustls",
  "hyper-util",
  "tokio",
+ "tower",
  "tracing",
  "tracing-subscriber",
 ]
